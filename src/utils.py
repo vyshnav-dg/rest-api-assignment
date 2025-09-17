@@ -1,4 +1,4 @@
-from db import db
+from src.db import db
 
 def get_all_records(cls):
     objs = db.session.execute(db.select(cls)).scalars()

@@ -1,8 +1,8 @@
 from flask import Flask, render_template
 
-from db import db
+from src.db import db
 
-from controllers import customer_controller, order_controller, product_controller
+from src.controllers import customer_controller, order_controller, product_controller
 
 
 app = Flask(__name__)

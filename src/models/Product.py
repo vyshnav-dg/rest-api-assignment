@@ -1,4 +1,4 @@
-from db import db
+from src.db import db
 from sqlalchemy import Integer, String, Numeric, SmallInteger, Boolean
 from sqlalchemy.orm import mapped_column
 

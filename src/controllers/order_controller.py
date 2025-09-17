@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 
-from db import db
-from models.Order import Order
-from utils import get_all_records, insert_record
+from src.db import db
+from src.models.Order import Order
+from src.utils import get_all_records, insert_record
 
 order_ctrl = Blueprint("order_ctrl", __name__)
 
