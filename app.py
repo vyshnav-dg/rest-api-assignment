@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify, render_template
 
 from models.Customer import Customer
+from models.Order import Order
 from db import db
+
+from utils import get_all_records, insert_record
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:root@localhost:3306/Northwind"
@@ -16,16 +19,15 @@ def hello():
 def handle_customer():
     match request.method:
         case "GET":
-            customers = db.session.execute(db.select(Customer)).scalars()
-            cols = Customer.get_cols()
-            resp = [{col: getattr(customer, col) for col in cols} for customer in customers]
-            return jsonify(resp)
+            try:
+                resp = get_all_records(Customer)
+                return jsonify(resp), 200
+            except Exception as e:
+                return f"Error : {e}", 400
         case "POST":
             try:
                 response = request.form.to_dict()
-                customer = Customer(response)
-                db.session.add(customer)
-                db.session.commit()
+                insert_record(response, Customer)
                 return "Insert success", 200
             except Exception as e:
                 return f"Error : {e}", 400
@@ -41,15 +43,41 @@ def handle_customer_update(customer_id):
     except Exception as e:
         return f"Error : {e}", 400
 
-@app.route("/orders")
+@app.route("/orders", methods=["GET", "POST"])
 def handle_order():
     match request.method:
         case "GET":
-            ...
+            try:
+                customer_id = request.args.get("customer_id")
+                if customer_id:
+                    # Get orders by customer ID
+                    orders = db.session.execute(db.select(Order).filter_by(CustomerID=customer_id)).scalars()
+                    cols = Order.get_cols()
+                    resp = [{col : getattr(order, col) for col in cols} for order in orders]
+                else:
+                    resp = get_all_records(Order)
+                return jsonify(resp), 200
+            except Exception as e:
+                return f"Error : {e}", 400
         case "POST":
-            ...
-        case "PATCH":
-            ...
+            try:
+                response = request.form.to_dict()
+                insert_record(response, Order)
+                return "Insert success", 200
+            except Exception as e:
+                return f"Error : {e}", 400
+
+@app.route("/orders/<int:order_id>", methods=["PATCH"])
+def handle_order_update(order_id):
+    try:
+        data = request.get_json()
+        order = db.session.execute(db.select(Order).filter_by(OrderID=order_id)).scalar_one()
+        order.update_vals(data)
+        db.session.commit()
+        return "Update success", 200
+    except Exception as e:
+        return f"Error : {e}", 400    
+
 
 @app.route("/products")
 def handle_product():
