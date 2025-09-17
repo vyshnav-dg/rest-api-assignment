@@ -1,109 +1,19 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template
 
-from models.Customer import Customer
-from models.Order import Order
-from models.Product import Product
 from db import db
 
-from utils import get_all_records, insert_record
+from controllers import customer_controller, order_controller, product_controller
+
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:root@localhost:3306/Northwind"
 
 db.init_app(app)
 
+app.register_blueprint(customer_controller.customer_ctrl)
+app.register_blueprint(order_controller.order_ctrl)
+app.register_blueprint(product_controller.product_ctrl)
+
 @app.route("/")
 def hello():
     return render_template("index.html")
-
-@app.route("/customers", methods=["GET", "POST"])
-def handle_customer():
-    match request.method:
-        case "GET":
-            try:
-                resp = get_all_records(Customer)
-                return jsonify(resp), 200
-            except Exception as e:
-                return f"Error : {e}", 400
-        case "POST":
-            try:
-                response = request.form.to_dict()
-                insert_record(response, Customer)
-                return "Insert success", 200
-            except Exception as e:
-                return f"Error : {e}", 400
-
-@app.route("/customers/<customer_id>", methods=["PATCH"])
-def handle_customer_update(customer_id):
-    try:
-        data = request.get_json()
-        customer = db.session.execute(db.select(Customer).filter_by(CustomerID=customer_id)).scalar_one()
-        customer.update_vals(data)
-        db.session.commit()
-        return "Update success", 200
-    except Exception as e:
-        return f"Error : {e}", 400
-
-@app.route("/orders", methods=["GET", "POST"])
-def handle_order():
-    match request.method:
-        case "GET":
-            try:
-                customer_id = request.args.get("customer_id")
-                if customer_id:
-                    # Get orders by customer ID
-                    orders = db.session.execute(db.select(Order).filter_by(CustomerID=customer_id)).scalars()
-                    cols = Order.get_cols()
-                    resp = [{col : getattr(order, col) for col in cols} for order in orders]
-                else:
-                    resp = get_all_records(Order)
-                return jsonify(resp), 200
-            except Exception as e:
-                return f"Error : {e}", 400
-        case "POST":
-            try:
-                response = request.form.to_dict()
-                insert_record(response, Order)
-                return "Insert success", 200
-            except Exception as e:
-                return f"Error : {e}", 400
-
-@app.route("/orders/<int:order_id>", methods=["PATCH"])
-def handle_order_update(order_id):
-    try:
-        data = request.get_json()
-        order = db.session.execute(db.select(Order).filter_by(OrderID=order_id)).scalar_one()
-        order.update_vals(data)
-        db.session.commit()
-        return "Update success", 200
-    except Exception as e:
-        return f"Error : {e}", 400    
-
-
-@app.route("/products", methods= ["GET", "POST"])
-def handle_product():
-    match request.method:
-        case "GET":
-            try:
-                resp = get_all_records(Product)
-                return jsonify(resp), 200
-            except Exception as e:
-                return f"Error : {e}", 400
-        case "POST":
-            try:
-                response = request.form.to_dict()
-                insert_record(response, Product)
-                return "Insert success", 200
-            except Exception as e:
-                return f"Error : {e}", 400
-            
-@app.route("/products/<int:product_id>", methods=["PATCH"])
-def handle_product_update(product_id):
-    try:
-        data = request.get_json()
-        product = db.session.execute(db.select(Product).filter_by(ProductID=product_id)).scalar_one()
-        product.update_vals(data)
-        db.session.commit()
-        return "Update success", 200
-    except Exception as e:
-        return f"Error : {e}", 400   
