@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 
 from models.Customer import Customer
 from models.Order import Order
+from models.Product import Product
 from db import db
 
 from utils import get_all_records, insert_record
@@ -79,12 +80,30 @@ def handle_order_update(order_id):
         return f"Error : {e}", 400    
 
 
-@app.route("/products")
+@app.route("/products", methods= ["GET", "POST"])
 def handle_product():
     match request.method:
         case "GET":
-            ...
+            try:
+                resp = get_all_records(Product)
+                return jsonify(resp), 200
+            except Exception as e:
+                return f"Error : {e}", 400
         case "POST":
-            ...
-        case "PATCH":
-            ...
+            try:
+                response = request.form.to_dict()
+                insert_record(response, Product)
+                return "Insert success", 200
+            except Exception as e:
+                return f"Error : {e}", 400
+            
+@app.route("/products/<int:product_id>", methods=["PATCH"])
+def handle_product_update(product_id):
+    try:
+        data = request.get_json()
+        product = db.session.execute(db.select(Product).filter_by(ProductID=product_id)).scalar_one()
+        product.update_vals(data)
+        db.session.commit()
+        return "Update success", 200
+    except Exception as e:
+        return f"Error : {e}", 400   
