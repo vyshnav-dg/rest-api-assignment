@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 from models.Customer import Customer
 from db import db
@@ -10,20 +10,36 @@ db.init_app(app)
 
 @app.route("/")
 def hello():
-    return "<p>Hello!!</p>"
+    return render_template("index.html")
 
-@app.route("/customers")
+@app.route("/customers", methods=["GET", "POST"])
 def handle_customer():
     match request.method:
         case "GET":
-            customers = Customer.query.all()
+            customers = db.session.execute(db.select(Customer)).scalars()
             cols = Customer.get_cols()
             resp = [{col: getattr(customer, col) for col in cols} for customer in customers]
             return jsonify(resp)
         case "POST":
-            print(request.get_json())
-        case "PATCH":
-            ...
+            try:
+                response = request.form.to_dict()
+                customer = Customer(response)
+                db.session.add(customer)
+                db.session.commit()
+                return "Insert success", 200
+            except Exception as e:
+                return f"Error : {e}", 400
+
+@app.route("/customers/<customer_id>", methods=["PATCH"])
+def handle_customer_update(customer_id):
+    try:
+        data = request.get_json()
+        customer = db.session.execute(db.select(Customer).filter_by(CustomerID=customer_id)).scalar_one()
+        customer.update_vals(data)
+        db.session.commit()
+        return "Update success", 200
+    except Exception as e:
+        return f"Error : {e}", 400
 
 @app.route("/orders")
 def handle_order():

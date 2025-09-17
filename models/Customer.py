@@ -16,7 +16,3 @@ class Customer(db.Model):
     Country = mapped_column(String(50))
     Phone = mapped_column(String(30))
     Fax = mapped_column(String(30))
-
-    @staticmethod
-    def get_cols():
-        return [column.name for column in Customer.__table__.columns]
