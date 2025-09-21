@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from sqlalchemy.exc import IntegrityError, DataError, OperationalError, NoResultFound
 
 from src.db import db
 from src.models.Order import Order
@@ -20,21 +21,26 @@ def handle_order():
                 else:
                     resp = get_all_records(Order)
                 return jsonify(resp), 200
+            except OperationalError as e:
+                return jsonify({"error": "Database connection failed", "message": str(e)}), 400
             except Exception as e:
-                return jsonify({
-                    "error": "ERROR",
-                    "message": str(e)
-                }), 400
+                return jsonify({"error": "Unexpected error", "message": str(e)}), 400
         case "POST":
             try:
                 response = request.form.to_dict()
                 insert_record(response, Order)
                 return "Insert success", 200
+            except IntegrityError as e:
+                db.session.rollback()
+                return jsonify({"error": "Integrity error", "message": "Duplicate Primary Key or missing required fields"}), 400
+            except DataError as e:
+                db.session.rollback()
+                return jsonify({"error": "Invalid data", "message": str(e)}), 400
+            except OperationalError as e:
+                return jsonify({"error": "Database operation failed", "message": str(e)}), 400
             except Exception as e:
-                return jsonify({
-                    "error": "ERROR",
-                    "message": str(e)
-                }), 400
+                db.session.rollback()
+                return jsonify({"error": "Unexpected error", "message": str(e)}), 400
 
 @order_ctrl.route("/orders/<int:order_id>", methods=["PATCH"])
 def handle_order_update(order_id):
@@ -44,8 +50,17 @@ def handle_order_update(order_id):
         order.update_vals(data)
         db.session.commit()
         return "Update success", 200
+
+    except NoResultFound:
+        return jsonify({"error": "Customer not found", "message": f"No customer with ID '{order_id}'"}), 404
+    except IntegrityError as e:
+        db.session.rollback()
+        return jsonify({"error": "Integrity error", "message": "Duplicate Primary Key or missing required fields"}), 400
+    except DataError as e:
+        db.session.rollback()
+        return jsonify({"error": "Invalid data", "message": str(e.orig)}), 400
+    except OperationalError as e:
+        return jsonify({"error": "Database operation failed", "message": str(e)}), 400
     except Exception as e:
-        return jsonify({
-            "error": "ERROR",
-            "message": str(e)
-        }), 400
+        db.session.rollback()
+        return jsonify({"error": "Unexpected error", "message": str(e)}), 400
