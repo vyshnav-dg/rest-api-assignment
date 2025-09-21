@@ -21,14 +21,20 @@ def handle_order():
                     resp = get_all_records(Order)
                 return jsonify(resp), 200
             except Exception as e:
-                return f"Error : {e}", 400
+                return jsonify({
+                    "error": "ERROR",
+                    "message": str(e)
+                }), 400
         case "POST":
             try:
                 response = request.form.to_dict()
                 insert_record(response, Order)
                 return "Insert success", 200
             except Exception as e:
-                return f"Error : {e}", 400
+                return jsonify({
+                    "error": "ERROR",
+                    "message": str(e)
+                }), 400
 
 @order_ctrl.route("/orders/<int:order_id>", methods=["PATCH"])
 def handle_order_update(order_id):
@@ -39,4 +45,7 @@ def handle_order_update(order_id):
         db.session.commit()
         return "Update success", 200
     except Exception as e:
-        return f"Error : {e}", 400   
+        return jsonify({
+            "error": "ERROR",
+            "message": str(e)
+        }), 400

@@ -14,7 +14,10 @@ def handle_product():
                 resp = get_all_records(Product)
                 return jsonify(resp), 200
             except Exception as e:
-                return f"Error : {e}", 400
+                return jsonify({
+                    "error": "ERROR",
+                    "message": str(e)
+                }), 400
         case "POST":
             try:
                 response = request.form.to_dict()
@@ -23,7 +26,10 @@ def handle_product():
                 insert_record(response, Product)
                 return "Insert success", 200
             except Exception as e:
-                return f"Error : {e}", 400
+                return jsonify({
+                    "error": "ERROR",
+                    "message": str(e)
+                }), 400
             
 @product_ctrl.route("/products/<int:product_id>", methods=["PATCH"])
 def handle_product_update(product_id):
@@ -34,4 +40,7 @@ def handle_product_update(product_id):
         db.session.commit()
         return "Update success", 200
     except Exception as e:
-        return f"Error : {e}", 400  
+        return jsonify({
+            "error": "ERROR",
+            "message": str(e)
+        }), 400

@@ -10,10 +10,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:root@localhost:3306/Northw
 
 db.init_app(app)
 
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 app.register_blueprint(customer_controller.customer_ctrl)
 app.register_blueprint(order_controller.order_ctrl)
 app.register_blueprint(product_controller.product_ctrl)
-
-@app.route("/")
-def hello():
-    return render_template("index.html")
