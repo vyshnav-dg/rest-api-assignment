@@ -27,9 +27,9 @@ def handle_order():
                 return jsonify({"error": "Unexpected error", "message": str(e)}), 400
         case "POST":
             try:
-                response = request.form.to_dict()
+                response = request.get_json()
                 insert_record(response, Order)
-                return "Insert success", 200
+                return jsonify({"message": "Insert success"}), 200
             except IntegrityError as e:
                 db.session.rollback()
                 return jsonify({"error": "Integrity error", "message": "Duplicate Primary Key or missing required fields"}), 400
@@ -49,10 +49,10 @@ def handle_order_update(order_id):
         order = db.session.execute(db.select(Order).filter_by(OrderID=order_id)).scalar_one()
         order.update_vals(data)
         db.session.commit()
-        return "Update success", 200
+        return jsonify({"message": "Update success"}), 200
 
     except NoResultFound:
-        return jsonify({"error": "Customer not found", "message": f"No customer with ID '{order_id}'"}), 404
+        return jsonify({"error": "Order not found", "message": f"No order with ID '{order_id}'"}), 400
     except IntegrityError as e:
         db.session.rollback()
         return jsonify({"error": "Integrity error", "message": "Duplicate Primary Key or missing required fields"}), 400

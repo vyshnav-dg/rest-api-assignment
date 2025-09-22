@@ -19,12 +19,12 @@ def handle_customer():
 
     elif request.method == "POST":
         try:
-            response = request.form.to_dict()
+            response = request.get_json()
             insert_record(response, Customer)
-            return "Insert success", 200
+            return jsonify({"message": "Insert success"}), 200
         except IntegrityError as e:
             db.session.rollback()
-            return jsonify({"error": "Integrity error", "message": "Duplicate Primary Key or missing required fields"}), 400
+            return jsonify({"error": "Integrity error", "message": f"Duplicate Primary Key or missing required fields {str(e)}"}), 400
         except DataError as e:
             db.session.rollback()
             return jsonify({"error": "Invalid data", "message": str(e)}), 400
@@ -43,10 +43,10 @@ def handle_customer_update(customer_id):
         ).scalar_one()
         customer.update_vals(data)
         db.session.commit()
-        return "Update success", 200
+        return jsonify({"message": "Update success"}), 200
 
     except NoResultFound:
-        return jsonify({"error": "Customer not found", "message": f"No customer with ID '{customer_id}'"}), 404
+        return jsonify({"error": "Customer not found", "message": f"No customer with ID '{customer_id}'"}), 400
     except IntegrityError as e:
         db.session.rollback()
         return jsonify({"error": "Integrity error", "message": "Duplicate Primary Key or missing required fields"}), 400

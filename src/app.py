@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from flask_cors import CORS
 
 from src.db import db
 
@@ -6,6 +7,7 @@ from src.controllers import customer_controller, order_controller, product_contr
 
 
 app = Flask(__name__)
+CORS(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:root@localhost:3306/Northwind"
 
 db.init_app(app)

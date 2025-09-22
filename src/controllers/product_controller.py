@@ -20,11 +20,11 @@ def handle_product():
                 return jsonify({"error": "Unexpected error", "message": str(e)}), 400
         case "POST":
             try:
-                response = request.form.to_dict()
+                response = request.get_json()
                 if response.get("Discontinued"):
                     response["Discontinued"] = response["Discontinued"].lower() == "true"
                 insert_record(response, Product)
-                return "Insert success", 200
+                return jsonify({"message": "Insert success"}), 200
             except IntegrityError as e:
                 db.session.rollback()
                 return jsonify({"error": "Integrity error", "message": "Duplicate Primary Key or missing required fields"}), 400
@@ -44,10 +44,10 @@ def handle_product_update(product_id):
         product = db.session.execute(db.select(Product).filter_by(ProductID=product_id)).scalar_one()
         product.update_vals(data)
         db.session.commit()
-        return "Update success", 200
+        return jsonify({"message": "Update success"}), 200
 
     except NoResultFound:
-        return jsonify({"error": "Customer not found", "message": f"No customer with ID '{product_id}'"}), 404
+        return jsonify({"error": "Product not found", "message": f"No product with ID '{product_id}'"}), 400
     except IntegrityError as e:
         db.session.rollback()
         return jsonify({"error": "Integrity error", "message": "Duplicate Primary Key or missing required fields"}), 400

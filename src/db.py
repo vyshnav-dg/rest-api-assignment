@@ -2,7 +2,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import String, Numeric, Boolean, Date, SmallInteger, Integer
 from flask_sqlalchemy import SQLAlchemy
 
-import datetime
+from datetime import datetime
 
 class Base(DeclarativeBase):
     def __init__(self, dict_vals):
